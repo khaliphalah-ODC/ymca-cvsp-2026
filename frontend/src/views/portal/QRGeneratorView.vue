@@ -1,10 +1,13 @@
 <script setup>
 import { computed, ref } from 'vue'
+import AdminMobileNav from '../../components/stitch/AdminMobileNav.vue'
 
 const copied = ref('')
 const appUrl = computed(() => {
   const configured = import.meta.env.VITE_PUBLIC_APP_URL
-  return String(configured || window.location.origin).replace(/\/$/, '')
+  const currentOrigin = window.location.origin
+  const shouldUseCurrentOrigin = !configured || (configured.includes('localhost') && !currentOrigin.includes('localhost'))
+  return String(shouldUseCurrentOrigin ? currentOrigin : configured).replace(/\/$/, '')
 })
 
 const locations = [
@@ -36,6 +39,7 @@ async function copyLink(location) {
 
 <template>
   <div class="text-on-background bg-background min-h-screen">
+    <AdminMobileNav />
     <aside class="hidden md:flex flex-col h-screen py-lg px-md w-64 fixed left-0 top-0 z-40 bg-surface-container-low border-r border-outline-variant">
       <div class="mb-xl px-sm">
         <h1 class="font-headline-md text-headline-md font-black text-primary">Montserrado YMCA</h1>
