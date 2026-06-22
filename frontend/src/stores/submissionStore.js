@@ -9,6 +9,20 @@ const defaultStats = {
   critical_issues: 0,
 }
 
+const activeStatuses = ['Submitted', 'Under Review', 'In Progress']
+const resolvedStatuses = ['Resolved', 'Closed']
+
+function normalizeStatus(status) {
+  const map = {
+    open: 'Submitted',
+    submitted: 'Submitted',
+    in_progress: 'In Progress',
+    resolved: 'Resolved',
+    closed: 'Closed',
+  }
+  return map[String(status || '').toLowerCase()] || status || 'Submitted'
+}
+
 const detailSelect = `
   *,
   parents(*),
@@ -16,6 +30,31 @@ const detailSelect = `
   caregivers(*),
   staff(*)
 `
+
+function logSupabaseError(context, err) {
+  console.error(`[submissionStore] ${context}`, {
+    message: err?.message,
+    details: err?.details,
+    hint: err?.hint,
+    code: err?.code,
+    error: err,
+  })
+}
+
+function getSubmitterContext(row) {
+  return row.parents || row.children || row.caregivers || {}
+}
+
+function normalizeSubmission(row) {
+  const context = getSubmitterContext(row)
+  return {
+    ...row,
+    status: normalizeStatus(row.status),
+    tracking_id: row.tracking_id || row.ticket_ref,
+    submitter_name: row.is_anonymous ? 'Anonymous' : context.full_name || 'Anonymous',
+    program_name: context.program_name || 'Unknown Program',
+  }
+}
 
 export const useSubmissionStore = defineStore('submissions', {
   state: () => ({
@@ -31,6 +70,38 @@ export const useSubmissionStore = defineStore('submissions', {
     totalCount: (state) => state.stats.total_submissions || 0,
   },
   actions: {
+    async logCurrentAdminSession() {
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError) throw userError
+
+        const user = userData?.user || null
+        console.info('[submissionStore] Supabase auth user', {
+          id: user?.id || null,
+          email: user?.email || null,
+        })
+
+        if (!user) return null
+
+        const { data: adminProfile, error: profileError } = await supabase
+          .from('admin_profiles')
+          .select('user_id, full_name, role')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (profileError) {
+          logSupabaseError('Admin profile lookup failed. This usually means RLS denied the read or the user is not an admin.', profileError)
+          return user
+        }
+
+        console.info('[submissionStore] Matching admin profile', adminProfile)
+        return user
+      } catch (err) {
+        logSupabaseError('Unable to read current Supabase auth user', err)
+        return null
+      }
+    },
+
     async fetchStats() {
       this.loading = true
       this.error = ''
@@ -39,6 +110,7 @@ export const useSubmissionStore = defineStore('submissions', {
         if (error) throw error
         this.stats = data?.[0] || { ...defaultStats }
       } catch (err) {
+        logSupabaseError('get_submission_stats RPC failed; falling back to direct submissions query', err)
         const fallbackStats = await this.fetchStatsFallback()
         if (fallbackStats) {
           this.stats = fallbackStats
@@ -59,6 +131,7 @@ export const useSubmissionStore = defineStore('submissions', {
         if (error) throw error
         this.submissions = data || []
       } catch (err) {
+        logSupabaseError('get_recent_submissions RPC failed; falling back to direct submissions query', err)
         const fallbackRows = await this.fetchRecentSubmissionsFallback(limit)
         if (fallbackRows) {
           this.submissions = fallbackRows
@@ -76,14 +149,18 @@ export const useSubmissionStore = defineStore('submissions', {
         .from('submissions')
         .select('status, urgency')
 
-      if (error) return null
+      if (error) {
+        logSupabaseError('Direct stats fallback query failed', error)
+        await this.logCurrentAdminSession()
+        return null
+      }
 
       return {
         total_submissions: data.length,
-        open_cases: data.filter((row) => row.status === 'open').length,
-        in_progress: data.filter((row) => row.status === 'in_progress').length,
-        resolved: data.filter((row) => row.status === 'resolved').length,
-        critical_issues: data.filter((row) => row.urgency === 'critical' && row.status !== 'resolved').length,
+        open_cases: data.filter((row) => activeStatuses.includes(normalizeStatus(row.status))).length,
+        in_progress: data.filter((row) => normalizeStatus(row.status) === 'In Progress').length,
+        resolved: data.filter((row) => resolvedStatuses.includes(normalizeStatus(row.status))).length,
+        critical_issues: data.filter((row) => row.urgency === 'critical' && !resolvedStatuses.includes(normalizeStatus(row.status))).length,
       }
     },
 
@@ -94,16 +171,13 @@ export const useSubmissionStore = defineStore('submissions', {
         .order('created_at', { ascending: false })
         .limit(limit)
 
-      if (error) return null
+      if (error) {
+        logSupabaseError('Direct recent submissions fallback query failed', error)
+        await this.logCurrentAdminSession()
+        return null
+      }
 
-      return (data || []).map((row) => {
-        const context = row.parents || row.children || row.caregivers || {}
-        return {
-          ...row,
-          submitter_name: row.is_anonymous ? 'Anonymous' : context.full_name || 'Anonymous',
-          program_name: context.program_name || 'Unknown Program',
-        }
-      })
+      return (data || []).map(normalizeSubmission)
     },
 
     async fetchSubmissions(filters = {}) {
@@ -123,8 +197,10 @@ export const useSubmissionStore = defineStore('submissions', {
         if (filters.dateTo) query = query.lte('created_at', filters.dateTo)
         const { data, error } = await query
         if (error) throw error
-        this.submissions = data || []
+        this.submissions = (data || []).map(normalizeSubmission)
       } catch (err) {
+        logSupabaseError('Unable to load submissions', err)
+        await this.logCurrentAdminSession()
         this.error = err.message || 'Unable to load submissions.'
       } finally {
         this.loading = false
@@ -141,9 +217,11 @@ export const useSubmissionStore = defineStore('submissions', {
           .eq('id', id)
           .single()
         if (error) throw error
-        this.selectedSubmission = data
-        return data
+        this.selectedSubmission = normalizeSubmission(data)
+        return this.selectedSubmission
       } catch (err) {
+        logSupabaseError('Unable to load submission details', err)
+        await this.logCurrentAdminSession()
         this.error = err.message || 'Unable to load submission details.'
         return null
       } finally {
@@ -151,11 +229,11 @@ export const useSubmissionStore = defineStore('submissions', {
       }
     },
 
-    async updateSubmissionStatus(id, status, admin_note = '', assigned_staff_id = null) {
+    async updateSubmissionStatus(id, status, admin_note = '', assigned_staff_id = null, resolution_notes = '') {
       this.loading = true
       this.error = ''
       try {
-        const updates = { status, admin_note }
+        const updates = { status, admin_note, resolution_notes }
         if (assigned_staff_id) updates.assigned_staff_id = assigned_staff_id
         const { data, error } = await supabase
           .from('submissions')
@@ -164,11 +242,14 @@ export const useSubmissionStore = defineStore('submissions', {
           .select(detailSelect)
           .single()
         if (error) throw error
-        this.selectedSubmission = data
-        this.submissions = this.submissions.map((item) => (item.id === id ? { ...item, ...data } : item))
+        const normalizedData = normalizeSubmission(data)
+        this.selectedSubmission = normalizedData
+        this.submissions = this.submissions.map((item) => (item.id === id ? { ...item, ...normalizedData } : item))
         await this.fetchStats()
-        return data
+        return normalizedData
       } catch (err) {
+        logSupabaseError('Unable to update submission', err)
+        await this.logCurrentAdminSession()
         this.error = err.message || 'Unable to update submission.'
         throw err
       } finally {

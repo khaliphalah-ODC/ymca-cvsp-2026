@@ -9,9 +9,14 @@ const { login, loading } = useAuth()
 const email = ref('')
 const password = ref('')
 const error = ref('')
+const showPassword = ref(false)
 
 async function submitLogin() {
   error.value = ''
+  if (!email.value || !password.value) {
+    error.value = 'Enter your email and password.'
+    return
+  }
   try {
     await login(email.value, password.value)
     router.push(String(route.query.redirect || '/admin/dashboard'))
@@ -42,7 +47,12 @@ async function submitLogin() {
 
         <label class="space-y-sm block">
           <span class="font-label-md text-label-md">Password</span>
-          <input v-model="password" class="w-full h-12 px-md bg-white border border-outline rounded-xl focus:ring-0" autocomplete="current-password" placeholder="Enter password" required type="password" />
+          <span class="relative block">
+            <input v-model="password" class="w-full h-12 pl-md pr-12 bg-white border border-outline rounded-xl focus:ring-0" autocomplete="current-password" placeholder="Enter password" required :type="showPassword ? 'text' : 'password'" />
+            <button class="absolute right-sm top-1/2 -translate-y-1/2 text-primary" type="button" :aria-label="showPassword ? 'Hide password' : 'Show password'" @click="showPassword = !showPassword">
+              <span class="material-symbols-outlined text-[22px]">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </span>
         </label>
 
         <p v-if="error" class="bg-error-container text-on-error-container px-md py-sm rounded-xl font-body-md text-body-md">{{ error }}</p>

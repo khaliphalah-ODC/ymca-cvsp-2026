@@ -10,17 +10,17 @@ defineProps({
       <span class="material-symbols-outlined">home</span>
       <span class="font-label-sm text-label-sm">Home</span>
     </RouterLink>
-    <RouterLink :class="active === 'Programs' ? 'flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2' : 'flex flex-col items-center justify-center text-on-surface-variant'" to="/programs">
+    <RouterLink :class="active === 'Activities' ? 'flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2' : 'flex flex-col items-center justify-center text-on-surface-variant'" to="/activities">
       <span class="material-symbols-outlined">history</span>
-      <span class="font-label-sm text-label-sm">Programs</span>
+      <span class="font-label-sm text-label-sm">Activities</span>
     </RouterLink>
-    <RouterLink :class="active === 'Services' ? 'flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2' : 'flex flex-col items-center justify-center text-on-surface-variant'" to="/services">
+    <RouterLink :class="active === 'Skills' ? 'flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2' : 'flex flex-col items-center justify-center text-on-surface-variant'" to="/skills">
       <span class="material-symbols-outlined">info</span>
-      <span class="font-label-sm text-label-sm">Services</span>
+      <span class="font-label-sm text-label-sm">Skills</span>
     </RouterLink>
-    <RouterLink :class="active === 'Contact' ? 'flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2' : 'flex flex-col items-center justify-center text-on-surface-variant'" to="/contact">
-      <span class="material-symbols-outlined">mail</span>
-      <span class="font-label-sm text-label-sm">Contact</span>
+    <RouterLink :class="active === 'Track' ? 'flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2' : 'flex flex-col items-center justify-center text-on-surface-variant'" to="/track">
+      <span class="material-symbols-outlined">search</span>
+      <span class="font-label-sm text-label-sm">Track</span>
     </RouterLink>
   </nav>
 </template>

@@ -1,63 +1,45 @@
 <script setup>
 import SiteNavbar from '../../components/stitch/SiteNavbar.vue'
 import SiteFooter from '../../components/stitch/SiteFooter.vue'
+import YmcaImage from '../../components/stitch/YmcaImage.vue'
+import { ymcaImages } from '../../utils/ymcaImages'
+
+const benefits = ['Safe vacation engagement', 'Sportsmanship and teamwork', 'Digital and creative exposure', 'Practical hard skills', 'Confidence, leadership, and civic responsibility']
 </script>
 
 <template>
-  <div class="bg-background text-on-background font-body-md overflow-x-hidden">
-    <SiteNavbar active="About" cta-container />
-    <main class="relative">
-      <section class="relative w-full h-[614px] flex items-center justify-center overflow-hidden">
-        <div class="absolute inset-0 z-0">
-          <div class="w-full h-full bg-cover bg-center opacity-40" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB6W3ZmmX9ohs55JrQJh9CctVCGfbNyHcwbdBK8uNgc2PyLK3CHxlrRHeme-MMrGAffxiUAVEwWtg-DVhqRc615z3LQ8MrkDmyktQcHa5Pr1HGfrDLHYd9SrvN-l1XchxR1MoTz65682nxFnkNorvBA23_uDQXpql40iLUwFcnxpWwERaKSy1VYKMqGht1DZiOitE6WczlRQ2Zy4KxGcaPR6H7C-GIEWvIGTeKQPh_kZc-eBuUbb8QQJDXsjJVAEuJbnOSDKs93SMU')"></div>
-          <div class="absolute inset-0 bg-gradient-to-b from-transparent to-background"></div>
-        </div>
-        <div class="relative z-10 text-center px-margin-mobile">
-          <h1 class="font-headline-xl text-headline-xl mb-md text-on-surface">Our Legacy of <span class="text-primary">Impact</span></h1>
-          <p class=" text-body-lg max-w-1xl mx-auto text-on-surface-variant">
-            Bridging the gap for youth in Montserrado County since our founding, fostering a community of leaders, creators, and change-makers.
-          </p>
+  <div class="bg-background text-on-background">
+    <SiteNavbar active="About" />
+    <main>
+      <section class="relative h-[520px] flex items-end overflow-hidden">
+        <YmcaImage :src="ymcaImages.hero[2]" alt="About CVSP 2026" wrapper-class="absolute inset-0" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/75 to-black/10"></div>
+        <div class="relative z-10 max-w-container-max-width mx-auto px-md lg:px-xl pb-2xl w-full text-white">
+          <p class="font-label-md text-label-md text-primary-fixed uppercase">About CVSP</p>
+          <h1 class="font-headline-xl text-headline-xl mt-sm">Two months of learning, play, and growth</h1>
         </div>
       </section>
-
-      <section class="max-w-container-max-width mx-auto px-margin-mobile lg:px-margin-desktop py-2xl">
-        <div class="bento-grid-about">
-          <article class="bento-item-large bg-surface-container-low p-xl rounded-3xl shadow-sm border border-outline-variant group hover:shadow-lg transition-all duration-300">
-            <div class="mb-lg"><span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings: 'FILL' 1;">rocket_launch</span></div>
-            <h2 class="font-headline-lg text-headline-lg mb-md">Our Mission</h2>
-            <p class="font-body-lg text-body-lg text-on-surface-variant">
-              Empowering youth through education, leadership, sports, and vocational skills. we believe in providing the tools necessary for every young person to carve their own path to success.
-            </p>
-            <div class="mt-xl grid grid-cols-2 gap-md">
-              <div class="bg-white p-md rounded-2xl border border-outline-variant flex items-center gap-3"><span class="material-symbols-outlined text-primary">school</span><span class="font-label-md">Education</span></div>
-              <div class="bg-white p-md rounded-2xl border border-outline-variant flex items-center gap-3"><span class="material-symbols-outlined text-primary">groups</span><span class="font-label-md">Leadership</span></div>
-            </div>
-          </article>
-          <article class="bento-item-med bg-primary-container text-on-primary-container p-xl rounded-3xl flex flex-col justify-between overflow-hidden relative">
-            <div class="relative z-10">
-              <h2 class="font-headline-lg text-headline-lg mb-md">Our Vision</h2>
-              <p class="font-body-md text-body-md opacity-90">Building stronger communities through empowered young people. A future where every youth in Montserrado is a catalyst for positive change.</p>
-            </div>
-            <div class="absolute -right-10 -bottom-10 opacity-20 transform rotate-12"><span class="material-symbols-outlined text-[180px]">visibility</span></div>
-          </article>
-          <article class="bento-item-med bg-secondary-container p-xl rounded-3xl border border-outline-variant">
-            <h2 class="font-headline-md text-headline-md mb-md text-on-secondary-container">Rooted in Purpose</h2>
-            <p class="font-body-md text-body-md text-on-surface-variant">Our work is guided by four fundamental pillars that define how we interact with our students, partners, and the community.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="bg-surface-container-lowest py-2xl">
-        <div class="max-w-container-max-width mx-auto px-margin-mobile lg:px-margin-desktop">
-          <div class="text-center mb-2xl">
-            <h2 class="font-headline-lg text-headline-lg text-primary mb-sm">Core Values</h2>
-            <p class="font-body-md text-body-md text-on-surface-variant">The principles that drive every action we take.</p>
+      <section class="max-w-container-max-width mx-auto px-md lg:px-xl py-3xl grid lg:grid-cols-12 gap-xl">
+        <div class="lg:col-span-7 space-y-lg">
+          <h2 class="font-headline-lg text-headline-lg">Program overview</h2>
+          <p class="font-body-lg text-body-lg text-on-surface-variant">YMCA Children's Vacation Sports Program 2026 is an informational, recreational, and developmental program hosted at YMCA Crown Hill, Broad Street, Monrovia. It gives participants a structured space to build skills, friendships, confidence, and community values during vacation.</p>
+          <div class="grid sm:grid-cols-2 gap-md">
+            <div class="rounded-xl bg-surface-container-low p-lg border border-outline-variant"><p class="font-label-sm text-label-sm text-primary uppercase">Duration</p><p class="font-headline-md text-headline-md">2 Months</p></div>
+            <div class="rounded-xl bg-surface-container-low p-lg border border-outline-variant"><p class="font-label-sm text-label-sm text-primary uppercase">Venue</p><p class="font-headline-md text-headline-md">YMCA Crown Hill, Broad Street, Monrovia</p></div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
-            <article v-for="value in ['Caring', 'Honesty', 'Respect', 'Responsibility']" :key="value" class="bg-white p-lg rounded-3xl border border-outline-variant shadow-sm">
-              <span class="material-symbols-outlined text-primary text-4xl mb-md">favorite</span>
-              <h3 class="font-headline-md text-headline-md mb-sm">{{ value }}</h3>
-              <p class="font-body-md text-body-md text-on-surface-variant">A practical value shaping every program, mentorship moment, and community partnership.</p>
+        </div>
+        <aside class="lg:col-span-5 bg-primary-container text-on-primary-container rounded-xl p-xl">
+          <h2 class="font-headline-lg text-headline-lg">Mission and objectives</h2>
+          <p class="font-body-md text-body-md mt-md opacity-90">To create a safe, active, and inspiring program where children and young people learn useful skills, enjoy sports, express creativity, and develop strong civic values.</p>
+        </aside>
+      </section>
+      <section class="bg-surface-container-low py-2xl">
+        <div class="max-w-container-max-width mx-auto px-md lg:px-xl">
+          <h2 class="font-headline-lg text-headline-lg mb-lg">Benefits for participants</h2>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-md">
+            <article v-for="benefit in benefits" :key="benefit" class="bg-surface-container-lowest rounded-xl border border-outline-variant p-md hover:-translate-y-1 hover:shadow-lg transition-all">
+              <span class="material-symbols-outlined text-primary">check_circle</span>
+              <p class="font-label-md text-label-md mt-sm">{{ benefit }}</p>
             </article>
           </div>
         </div>

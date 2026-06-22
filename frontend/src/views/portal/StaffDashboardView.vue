@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useSubmissionStore } from '../../stores/submissionStore'
 import { useAuth } from '../../utils/useAuth'
 import AdminMobileNav from '../../components/stitch/AdminMobileNav.vue'
+import { ymcaImages } from '../../utils/ymcaImages'
 
 const router = useRouter()
 const store = useSubmissionStore()
@@ -68,7 +69,7 @@ onMounted(async () => {
           <div class="flex items-center gap-md pl-lg border-l border-outline-variant">
             <div class="text-right hidden md:block"><p class="font-label-md text-label-md text-on-surface">{{ user?.email || 'Staff User' }}</p><p class="font-label-sm text-label-sm text-on-surface-variant opacity-70">Case Coordinator</p></div>
             <div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container border-2 border-primary">
-              <img class="w-full h-full object-cover" alt="Staff avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzZB3oeMAr1vl52cGIPxUMMU0YhYwJVeijQ127tAFoK7HkA1F1taQDHZ6i0kcNmRqYFRCXonH9wFTIXOEOIZv5zM1OXBVPTEuR0M2ZhPEViGDc9gTQkgl8d-M2AtycS4F8q5wKQmQfqli45Q-rA8xhZNS-A9ZOPRdcI0dHzp7nxsWNp-Tl3xuEsLICXoq1LBZ5-YgNoELVq6mEQeJgpLQwiD_e6k6JwWlUZ80p96fXH8lsvl9b9IXOSx4IuDGctFn2t5wTji5QzgQ"/>
+              <img class="w-full h-full object-cover" alt="Staff avatar" :src="ymcaImages.logo" />
             </div>
           </div>
         </div>
@@ -117,7 +118,7 @@ onMounted(async () => {
                   <td class="px-lg py-md">{{ submitterName(row) }}</td>
                   <td class="px-lg py-md text-on-surface-variant">{{ row.program_name || 'Unknown Program' }}</td>
                   <td class="px-lg py-md"><span class="inline-flex items-center gap-1 px-sm py-0.5 rounded-md bg-surface-container text-on-surface-variant text-[12px] font-bold capitalize">{{ row.urgency }}</span></td>
-                  <td class="px-lg py-md"><span class="font-label-sm text-label-sm bg-surface-container-highest px-md py-1 rounded-full text-on-surface capitalize">{{ row.status?.replace('_', ' ') }}</span></td>
+                  <td class="px-lg py-md"><span class="font-label-sm text-label-sm bg-surface-container-highest px-md py-1 rounded-full text-on-surface">{{ row.status }}</span></td>
                   <td class="px-lg py-md text-right"><RouterLink class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors" :to="`/admin/submissions/${row.id}`">visibility</RouterLink></td>
                 </tr>
               </tbody>

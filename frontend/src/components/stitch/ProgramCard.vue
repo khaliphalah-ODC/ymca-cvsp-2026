@@ -5,9 +5,9 @@ defineProps({
 </script>
 
 <template>
-  <article class="bg-white rounded-3xl overflow-hidden program-card-shadow flex flex-col">
+  <article class="group bg-white rounded-xl overflow-hidden program-card-shadow flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl">
     <div class="h-48 w-full relative">
-      <img class="w-full h-full object-cover" :alt="program.title" :src="program.image"/>
+      <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" :alt="program.title" :src="program.image" loading="lazy" />
       <span :class="['absolute top-4 right-4 font-label-sm text-label-sm px-sm py-xs rounded-lg', program.tagClass]">{{ program.tag }}</span>
     </div>
     <div class="p-lg flex flex-col flex-grow">
@@ -23,9 +23,6 @@ defineProps({
           <span class="font-label-md text-label-md">{{ program.ages }}</span>
         </div>
       </div>
-    </div>
-    <div class="p-lg pt-0">
-      <button class="w-full py-sm bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-all" type="button">Enroll Now</button>
     </div>
   </article>
 </template>

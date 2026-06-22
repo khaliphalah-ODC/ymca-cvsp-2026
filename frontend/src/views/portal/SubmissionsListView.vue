@@ -78,7 +78,7 @@ onMounted(applyFilters)
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-md">
           <input v-model.trim="filters.search" class="h-11 px-md bg-white border border-outline rounded-lg" placeholder="Ticket or name" type="search" />
-          <select v-model="filters.status" class="h-11 px-md bg-white border border-outline rounded-lg"><option value="">All status</option><option value="open">Open</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option></select>
+          <select v-model="filters.status" class="h-11 px-md bg-white border border-outline rounded-lg"><option value="">All status</option><option value="Submitted">Submitted</option><option value="Under Review">Under Review</option><option value="In Progress">In Progress</option><option value="Resolved">Resolved</option><option value="Closed">Closed</option></select>
           <select v-model="filters.category" class="h-11 px-md bg-white border border-outline rounded-lg"><option value="">All categories</option><option value="safety">Safety</option><option value="staff">Staff</option><option value="facilities">Facilities</option><option value="program">Program</option><option value="other">Other</option></select>
           <select v-model="filters.urgency" class="h-11 px-md bg-white border border-outline rounded-lg"><option value="">All urgency</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select>
           <input v-model="filters.dateFrom" class="h-11 px-md bg-white border border-outline rounded-lg" type="date" />
@@ -99,7 +99,7 @@ onMounted(applyFilters)
                 <td class="px-lg py-md">{{ submitterName(row) }}</td>
                 <td class="px-lg py-md text-on-surface-variant">{{ programName(row) }}</td>
                 <td class="px-lg py-md capitalize">{{ row.urgency }}</td>
-                <td class="px-lg py-md"><span class="font-label-sm text-label-sm bg-surface-container-highest px-md py-1 rounded-full text-on-surface capitalize">{{ row.status?.replace('_', ' ') }}</span></td>
+                <td class="px-lg py-md"><span class="font-label-sm text-label-sm bg-surface-container-highest px-md py-1 rounded-full text-on-surface">{{ row.status }}</span></td>
                 <td class="px-lg py-md text-on-surface-variant">{{ new Date(row.created_at).toLocaleDateString() }}</td>
                 <td class="px-lg py-md text-right"><RouterLink class="material-symbols-outlined text-on-surface-variant hover:text-primary" :to="`/admin/submissions/${row.id}`">visibility</RouterLink></td>
               </tr>

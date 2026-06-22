@@ -71,7 +71,9 @@ async function submitFeedback() {
 
     const { data, error: rpcError } = await supabase.rpc('submit_program_feedback', payload)
     if (rpcError) throw rpcError
-    router.push(`/success/${data?.[0]?.ticket_ref || 'YMCA-00001'}`)
+    const ticketRef = data?.[0]?.ticket_ref
+    if (!ticketRef) throw new Error('Submission was not saved. Please contact YMCA staff or try again.')
+    router.push(`/success/${ticketRef}`)
   } catch (err) {
     error.value = err.message
   } finally {

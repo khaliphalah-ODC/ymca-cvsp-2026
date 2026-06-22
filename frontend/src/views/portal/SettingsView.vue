@@ -6,49 +6,158 @@ import { supabase } from '../../utils/supabase'
 import { exportSubmissionsCsv, exportSubmissionsDoc, exportSubmissionsPdf } from '../../utils/exportReports'
 
 const store = useSubmissionStore()
-const imagePreview = ref(localStorage.getItem('ymca_brand_image') || '')
-const imageStatus = ref('')
-const uploading = ref(false)
 const exportRows = computed(() => store.submissions)
+const user = ref(null)
+const profile = ref({ full_name: '', email: '', avatar_url: '' })
+const avatarFile = ref(null)
+const avatarPreview = ref('')
+const profileStatus = ref('')
+const avatarStatus = ref('')
+const passwordStatus = ref('')
+const savingProfile = ref(false)
+const uploadingAvatar = ref(false)
+const changingPassword = ref(false)
+const passwordForm = ref({ current: '', next: '', confirm: '' })
 
-function readLocalPreview(file) {
-  const reader = new FileReader()
-  reader.onload = () => {
-    imagePreview.value = String(reader.result)
-    localStorage.setItem('ymca_brand_image', imagePreview.value)
+const passwordStrength = computed(() => {
+  const value = passwordForm.value.next
+  let score = 0
+  if (value.length >= 8) score += 1
+  if (/[A-Z]/.test(value)) score += 1
+  if (/[a-z]/.test(value)) score += 1
+  if (/\d/.test(value)) score += 1
+  if (/[^A-Za-z0-9]/.test(value)) score += 1
+  return score
+})
+
+async function loadProfile() {
+  const { data, error } = await supabase.auth.getUser()
+  if (error) {
+    profileStatus.value = error.message
+    return
   }
-  reader.readAsDataURL(file)
+  user.value = data.user
+  profile.value.email = data.user?.email || ''
+
+  const { data: adminProfile, error: profileError } = await supabase
+    .from('admin_profiles')
+    .select('full_name, avatar_url')
+    .eq('user_id', data.user.id)
+    .maybeSingle()
+
+  if (!profileError && adminProfile) {
+    profile.value.full_name = adminProfile.full_name || ''
+    profile.value.avatar_url = adminProfile.avatar_url || ''
+    avatarPreview.value = adminProfile.avatar_url || ''
+  }
 }
 
-async function uploadImage(event) {
+function selectAvatar(event) {
   const file = event.target.files?.[0]
+  avatarStatus.value = ''
   if (!file) return
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    avatarStatus.value = 'Use a JPG, PNG, or WebP image.'
+    return
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    avatarStatus.value = 'Avatar must be 2 MB or smaller.'
+    return
+  }
+  avatarFile.value = file
+  avatarPreview.value = URL.createObjectURL(file)
+}
 
-  uploading.value = true
-  imageStatus.value = ''
-  readLocalPreview(file)
-
+async function saveProfile() {
+  savingProfile.value = true
+  profileStatus.value = ''
   try {
-    const extension = file.name.split('.').pop() || 'png'
-    const path = `settings/ymca-brand-${Date.now()}.${extension}`
-    const { error } = await supabase.storage.from('site-assets').upload(path, file, {
+    if (profile.value.email && profile.value.email !== user.value.email) {
+      const { error } = await supabase.auth.updateUser({ email: profile.value.email })
+      if (error) throw error
+    }
+
+    const { error } = await supabase
+      .from('admin_profiles')
+      .update({ full_name: profile.value.full_name })
+      .eq('user_id', user.value.id)
+    if (error) throw error
+
+    profileStatus.value = 'Profile saved.'
+  } catch (err) {
+    console.error('[Settings] profile save failed', err)
+    profileStatus.value = err.message || 'Unable to save profile.'
+  } finally {
+    savingProfile.value = false
+  }
+}
+
+async function uploadAvatar() {
+  if (!avatarFile.value) {
+    avatarStatus.value = 'Choose an image before saving.'
+    return
+  }
+  uploadingAvatar.value = true
+  avatarStatus.value = ''
+  try {
+    const extension = avatarFile.value.name.split('.').pop() || 'jpg'
+    const path = `avatars/${user.value.id}.${extension}`
+    const { error } = await supabase.storage.from('site-assets').upload(path, avatarFile.value, {
       cacheControl: '3600',
       upsert: true,
     })
     if (error) throw error
-
     const { data } = supabase.storage.from('site-assets').getPublicUrl(path)
-    imagePreview.value = data.publicUrl
-    localStorage.setItem('ymca_brand_image', data.publicUrl)
-    imageStatus.value = 'Image uploaded and saved.'
+    profile.value.avatar_url = data.publicUrl
+    avatarPreview.value = data.publicUrl
+
+    const { error: updateError } = await supabase
+      .from('admin_profiles')
+      .update({ avatar_url: data.publicUrl })
+      .eq('user_id', user.value.id)
+    if (updateError) throw updateError
+    avatarStatus.value = 'Avatar uploaded.'
   } catch (err) {
-    imageStatus.value = 'Preview saved locally. Create a public Supabase Storage bucket named site-assets to save this online.'
+    console.error('[Settings] avatar upload failed', err)
+    avatarStatus.value = err.message || 'Unable to upload avatar.'
   } finally {
-    uploading.value = false
+    uploadingAvatar.value = false
+  }
+}
+
+async function changePassword() {
+  passwordStatus.value = ''
+  if (passwordStrength.value < 4) {
+    passwordStatus.value = 'Choose a stronger password.'
+    return
+  }
+  if (passwordForm.value.next !== passwordForm.value.confirm) {
+    passwordStatus.value = 'New passwords do not match.'
+    return
+  }
+
+  changingPassword.value = true
+  try {
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.value.email,
+      password: passwordForm.value.current,
+    })
+    if (verifyError) throw verifyError
+
+    const { error } = await supabase.auth.updateUser({ password: passwordForm.value.next })
+    if (error) throw error
+    passwordForm.value = { current: '', next: '', confirm: '' }
+    passwordStatus.value = 'Password updated.'
+  } catch (err) {
+    console.error('[Settings] password change failed', err)
+    passwordStatus.value = err.message || 'Unable to change password.'
+  } finally {
+    changingPassword.value = false
   }
 }
 
 onMounted(() => {
+  loadProfile()
   store.fetchSubmissions({ limit: 100 })
 })
 </script>
@@ -59,7 +168,7 @@ onMounted(() => {
     <main class="p-xl lg:p-2xl">
       <section class="max-w-5xl mx-auto bg-surface card-shadow rounded-xl border border-outline-variant p-xl mb-lg">
         <h1 class="font-headline-lg text-headline-lg text-on-surface mb-sm">Settings</h1>
-        <p class="font-body-md text-body-md text-on-surface-variant mb-lg">Manage program names, staff access, QR locations, and notification rules.</p>
+        <p class="font-body-md text-body-md text-on-surface-variant mb-lg">Manage admin profile, avatar, password, reports, and QR code tools.</p>
         <RouterLink class="inline-flex items-center gap-xs px-lg py-sm bg-primary text-on-primary rounded-xl font-bold" to="/admin/qr-codes">
           <span class="material-symbols-outlined text-[20px]">qr_code_2</span>
           Manage QR Codes
@@ -68,42 +177,53 @@ onMounted(() => {
 
       <section class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-lg">
         <article class="bg-surface card-shadow rounded-xl border border-outline-variant p-xl">
-          <h2 class="font-headline-md text-headline-md text-on-surface mb-sm">Brand Image Upload</h2>
-          <p class="font-body-md text-body-md text-on-surface-variant mb-lg">Upload a YMCA logo or image for admin branding and future public-page use.</p>
+          <h2 class="font-headline-md text-headline-md text-on-surface mb-md">Profile</h2>
+          <div class="space-y-md">
+            <label class="block space-y-sm"><span class="font-label-md text-label-md">Name</span><input v-model.trim="profile.full_name" class="w-full h-11 px-md bg-white border border-outline rounded-lg" type="text" /></label>
+            <label class="block space-y-sm"><span class="font-label-md text-label-md">Email</span><input v-model.trim="profile.email" class="w-full h-11 px-md bg-white border border-outline rounded-lg" type="email" /></label>
+            <button class="px-lg py-sm bg-primary text-on-primary rounded-xl font-bold disabled:opacity-70" :disabled="savingProfile" type="button" @click="saveProfile">{{ savingProfile ? 'Saving...' : 'Save Profile' }}</button>
+            <p v-if="profileStatus" class="font-body-md text-body-md text-on-surface-variant">{{ profileStatus }}</p>
+          </div>
+        </article>
 
-          <div class="rounded-xl border border-outline-variant bg-surface-container-low p-lg mb-lg flex items-center justify-center min-h-48">
-            <img v-if="imagePreview" class="max-h-40 object-contain" alt="Uploaded YMCA brand preview" :src="imagePreview" />
-            <div v-else class="text-center text-on-surface-variant">
-              <span class="material-symbols-outlined text-5xl">image</span>
-              <p class="font-label-md text-label-md">No image uploaded</p>
+        <article class="bg-surface card-shadow rounded-xl border border-outline-variant p-xl">
+          <h2 class="font-headline-md text-headline-md text-on-surface mb-md">Avatar</h2>
+          <div class="flex items-center gap-lg">
+            <div class="w-28 h-28 rounded-full border border-outline-variant bg-surface-container-low overflow-hidden grid place-items-center">
+              <img v-if="avatarPreview" class="w-full h-full object-cover" alt="Admin avatar preview" :src="avatarPreview" />
+              <span v-else class="material-symbols-outlined text-5xl text-primary">account_circle</span>
+            </div>
+            <div class="space-y-sm">
+              <label class="inline-flex items-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold cursor-pointer">
+                <span class="material-symbols-outlined text-[20px]">image</span>
+                Choose Image
+                <input class="hidden" accept="image/jpeg,image/png,image/webp" type="file" @change="selectAvatar" />
+              </label>
+              <button class="block px-lg py-sm bg-primary text-on-primary rounded-xl font-bold disabled:opacity-70" :disabled="uploadingAvatar" type="button" @click="uploadAvatar">{{ uploadingAvatar ? 'Uploading...' : 'Save Avatar' }}</button>
             </div>
           </div>
+          <p v-if="avatarStatus" class="font-body-md text-body-md text-on-surface-variant mt-md">{{ avatarStatus }}</p>
+        </article>
 
-          <label class="inline-flex items-center gap-xs px-lg py-sm bg-primary text-on-primary rounded-xl font-bold cursor-pointer">
-            <span class="material-symbols-outlined text-[20px]">upload</span>
-            {{ uploading ? 'Uploading...' : 'Choose Image' }}
-            <input class="hidden" accept="image/*" type="file" @change="uploadImage" />
-          </label>
-          <p v-if="imageStatus" class="font-body-md text-body-md text-on-surface-variant mt-md">{{ imageStatus }}</p>
+        <article class="bg-surface card-shadow rounded-xl border border-outline-variant p-xl">
+          <h2 class="font-headline-md text-headline-md text-on-surface mb-md">Password</h2>
+          <div class="space-y-md">
+            <input v-model="passwordForm.current" class="w-full h-11 px-md bg-white border border-outline rounded-lg" placeholder="Current password" type="password" />
+            <input v-model="passwordForm.next" class="w-full h-11 px-md bg-white border border-outline rounded-lg" placeholder="New password" type="password" />
+            <input v-model="passwordForm.confirm" class="w-full h-11 px-md bg-white border border-outline rounded-lg" placeholder="Confirm password" type="password" />
+            <div class="h-2 rounded-full bg-surface-container-high overflow-hidden"><div class="h-full bg-primary transition-all" :style="{ width: `${passwordStrength * 20}%` }"></div></div>
+            <button class="px-lg py-sm bg-primary text-on-primary rounded-xl font-bold disabled:opacity-70" :disabled="changingPassword" type="button" @click="changePassword">{{ changingPassword ? 'Updating...' : 'Change Password' }}</button>
+            <p v-if="passwordStatus" class="font-body-md text-body-md text-on-surface-variant">{{ passwordStatus }}</p>
+          </div>
         </article>
 
         <article class="bg-surface card-shadow rounded-xl border border-outline-variant p-xl">
           <h2 class="font-headline-md text-headline-md text-on-surface mb-sm">Report Export</h2>
           <p class="font-body-md text-body-md text-on-surface-variant mb-lg">Download the latest submissions for offline review and reporting.</p>
-
           <div class="space-y-sm">
-            <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsCsv(exportRows)">
-              <span class="material-symbols-outlined text-[20px]">table_view</span>
-              Export CSV
-            </button>
-            <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsPdf(exportRows)">
-              <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-              Export PDF
-            </button>
-            <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsDoc(exportRows)">
-              <span class="material-symbols-outlined text-[20px]">description</span>
-              Export DOC
-            </button>
+            <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsCsv(exportRows)"><span class="material-symbols-outlined text-[20px]">table_view</span>Export CSV</button>
+            <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsPdf(exportRows)"><span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>Export PDF</button>
+            <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsDoc(exportRows)"><span class="material-symbols-outlined text-[20px]">description</span>Export DOC</button>
           </div>
           <p class="font-label-sm text-label-sm text-on-surface-variant mt-md">{{ exportRows.length }} submissions loaded for export.</p>
         </article>

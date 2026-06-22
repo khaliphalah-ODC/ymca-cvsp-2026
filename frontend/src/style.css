@@ -15,6 +15,46 @@ body {
   color: #281716;
 }
 
+:root[data-theme='green'] body {
+  background: #f7fff8;
+  color: #132017;
+}
+
+:root[data-theme='green'] {
+  --theme-primary: #087a3d;
+}
+
+:root[data-theme='green'] .bg-primary {
+  background-color: #087a3d !important;
+}
+
+:root[data-theme='green'] .text-primary {
+  color: #087a3d !important;
+}
+
+:root[data-theme='green'] .border-primary {
+  border-color: #087a3d !important;
+}
+
+:root[data-theme='green'] .bg-primary-container {
+  background-color: #d8f5df !important;
+  color: #073b1f !important;
+}
+
+:root[data-theme='green'] .text-on-primary-container {
+  color: #073b1f !important;
+}
+
+:root[data-theme='green'] .bg-background,
+:root[data-theme='green'] .bg-surface {
+  background-color: #f7fff8 !important;
+}
+
+:root[data-theme='green'] .bg-surface-container-low,
+:root[data-theme='green'] .bg-surface-container {
+  background-color: #ecf8ee !important;
+}
+
 button,
 a,
 input,
