@@ -26,6 +26,12 @@ onMounted(async () => {
 
 <template>
   <AdminLayout title="Staff Dashboard" subtitle="Overview of CVSP complaints, suggestions, and follow-up work.">
+    <div class="flex justify-end mb-lg">
+      <RouterLink class="inline-flex items-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" to="/">
+        <span class="material-symbols-outlined text-[20px]">public</span>
+        View Public Site
+      </RouterLink>
+    </div>
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-md mb-2xl">
       <article v-for="card in cards" :key="card[1]" class="bg-surface card-shadow p-lg rounded-xl flex flex-col gap-sm border border-outline-variant hover:border-primary transition-all group">
         <div class="flex justify-between items-center text-on-surface-variant"><span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">{{ card[0] }}</span><span class="text-xs font-bold text-green-600 bg-green-50 px-sm py-0.5 rounded-full">{{ card[3] }}</span></div>

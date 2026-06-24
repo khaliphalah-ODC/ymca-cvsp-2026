@@ -147,18 +147,12 @@ export const useSubmissionStore = defineStore('submissions', {
       this.loading = true
       this.error = ''
       try {
-        const { data, error } = await supabase.rpc('get_recent_submissions', { limit_count: limit })
-        if (error) throw error
-        this.submissions = (data || []).map(normalizeSubmission)
+        const rows = await this.fetchRecentSubmissionsFallback(limit)
+        if (!rows) throw new Error('Unable to load recent submissions.')
+        this.submissions = rows
       } catch (err) {
-        logSupabaseError('get_recent_submissions RPC failed; falling back to direct submissions query', err)
-        const fallbackRows = await this.fetchRecentSubmissionsFallback(limit)
-        if (fallbackRows) {
-          this.submissions = fallbackRows
-          this.error = ''
-        } else {
-          this.error = err.message || 'Unable to load recent submissions.'
-        }
+        logSupabaseError('Unable to load recent submissions', err)
+        this.error = err.message || 'Unable to load recent submissions.'
       } finally {
         this.loading = false
       }

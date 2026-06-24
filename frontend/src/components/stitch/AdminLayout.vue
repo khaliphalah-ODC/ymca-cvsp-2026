@@ -51,6 +51,7 @@ async function signOut() {
         </RouterLink>
       </nav>
       <div class="mt-auto space-y-2 border-t border-outline-variant pt-lg">
+        <RouterLink class="w-full py-sm px-md bg-surface-container-high text-on-surface rounded-xl font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-xs" to="/"><span class="material-symbols-outlined text-[20px]">public</span>Public Site</RouterLink>
         <RouterLink class="w-full mb-lg py-sm px-md bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-xs" to="/admin/qr-codes"><span class="material-symbols-outlined text-[20px]">qr_code_2</span>Generate QR</RouterLink>
         <button class="w-full flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" type="button" @click="signOut"><span class="material-symbols-outlined">logout</span><span class="font-label-md text-label-md">Sign Out</span></button>
       </div>

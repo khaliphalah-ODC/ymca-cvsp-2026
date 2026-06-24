@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ymcaImages } from '../../utils/ymcaImages'
 import { isSupabaseConfigured, supabase } from '../../utils/supabase'
 
 const route = useRoute()
@@ -73,7 +74,13 @@ async function submitFeedback() {
     if (rpcError) throw rpcError
     const ticketRef = data?.[0]?.ticket_ref
     if (!ticketRef) throw new Error('Submission was not saved. Please contact YMCA staff or try again.')
-    router.push(`/success/${ticketRef}`)
+    router.push({
+      path: `/success/${ticketRef}`,
+      query: {
+        location: String(location.value),
+        type: form.type,
+      },
+    })
   } catch (err) {
     error.value = err.message
   } finally {
@@ -87,10 +94,8 @@ async function submitFeedback() {
     <header class="w-full bg-white card-shadow h-20 flex items-center px-md lg:px-xl sticky top-0 z-50">
       <div class="max-w-container-max-width mx-auto w-full flex justify-between items-center">
         <RouterLink class="flex items-center gap-sm" to="/">
-          <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-            <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">diversity_1</span>
-          </div>
-          <h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Montserrado YMCA</h1>
+          <img class="w-12 h-12 rounded-full object-cover border border-outline-variant/40" :src="ymcaImages.logo" alt="YMCA logo" />
+          <h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Montserrado County YMCA</h1>
         </RouterLink>
         <div class="flex items-center gap-xs px-sm py-1 bg-secondary-container rounded-full text-on-secondary-container">
           <span class="material-symbols-outlined text-sm">lock</span>
@@ -122,10 +127,6 @@ async function submitFeedback() {
               This private feedback form opens from a YMCA location QR code. Please scan the QR code posted by staff at your program area.
             </p>
           </div>
-          <RouterLink class="inline-flex items-center justify-center gap-xs px-lg py-sm bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity" to="/admin/qr-codes">
-            <span class="material-symbols-outlined text-[20px]">lock</span>
-            Staff QR Page
-          </RouterLink>
         </div>
       </section>
 
