@@ -11,10 +11,11 @@ async function signOut() {
 }
 
 const links = [
-  ['dashboard', 'Overview', '/admin/dashboard'],
+  ['dashboard', 'Dashboard', '/admin/dashboard'],
   ['folder_shared', 'Submissions', '/admin/submissions'],
+  ['analytics', 'Reports', '/admin/reports'],
   ['qr_code_2', 'QR Codes', '/admin/qr-codes'],
-  ['assignment_ind', 'Cases', '/admin/cases'],
+  ['assignment_ind', 'Staff', '/admin/staff'],
   ['settings', 'Settings', '/admin/settings'],
 ]
 </script>

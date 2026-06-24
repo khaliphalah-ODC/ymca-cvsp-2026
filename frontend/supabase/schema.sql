@@ -27,6 +27,7 @@ create table if not exists public.admin_profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   staff_id uuid references public.staff(id) on delete set null,
   full_name text,
+  avatar_url text,
   role text not null default 'admin' check (role in ('admin', 'reviewer')),
   created_at timestamptz not null default now()
 );
@@ -68,6 +69,7 @@ create table if not exists public.caregivers (
 create table if not exists public.submissions (
   id uuid primary key default gen_random_uuid(),
   ticket_ref text not null unique,
+  tracking_id text not null unique,
   submitted_by_type text not null check (submitted_by_type in ('parent', 'child', 'caregiver')),
   is_anonymous boolean not null default false,
   parent_id uuid references public.parents(id) on delete restrict,
@@ -79,8 +81,9 @@ create table if not exists public.submissions (
   urgency text not null default 'medium' check (urgency in ('low', 'medium', 'high', 'critical')),
   message text not null check (char_length(trim(message)) >= 10),
   location text not null default 'unknown',
-  status text not null default 'open' check (status in ('open', 'in_progress', 'resolved')),
+  status text not null default 'Submitted' check (status in ('Submitted', 'Under Review', 'In Progress', 'Resolved', 'Closed')),
   admin_note text,
+  resolution_notes text,
   reviewed_at timestamptz,
   resolved_at timestamptz,
   created_at timestamptz not null default now(),
@@ -100,6 +103,7 @@ create index if not exists parents_program_name_idx on public.parents(program_na
 create index if not exists children_program_name_idx on public.children(program_name);
 create index if not exists caregivers_program_name_idx on public.caregivers(program_name);
 create index if not exists submissions_ticket_ref_idx on public.submissions(ticket_ref);
+create index if not exists submissions_tracking_id_idx on public.submissions(tracking_id);
 create index if not exists submissions_submitter_type_idx on public.submissions(submitted_by_type);
 create index if not exists submissions_status_idx on public.submissions(status);
 create index if not exists submissions_category_idx on public.submissions(category);
@@ -114,6 +118,9 @@ as $$
 begin
   if new.ticket_ref is null or new.ticket_ref = '' then
     new.ticket_ref := 'YMCA-' || lpad(nextval('public.submission_ticket_seq')::text, 5, '0');
+  end if;
+  if new.tracking_id is null or new.tracking_id = '' then
+    new.tracking_id := new.ticket_ref;
   end if;
   return new;
 end;
@@ -136,11 +143,11 @@ as $$
 begin
   new.updated_at := now();
 
-  if new.status = 'in_progress' and old.status = 'open' and new.reviewed_at is null then
+  if new.status in ('Under Review', 'In Progress') and old.status = 'Submitted' and new.reviewed_at is null then
     new.reviewed_at := now();
   end if;
 
-  if new.status = 'resolved' and old.status <> 'resolved' and new.resolved_at is null then
+  if new.status in ('Resolved', 'Closed') and old.status not in ('Resolved', 'Closed') and new.resolved_at is null then
     new.resolved_at := now();
   end if;
 
@@ -363,10 +370,10 @@ set search_path = public
 as $$
   select
     count(*)::bigint as total_submissions,
-    count(*) filter (where status = 'open')::bigint as open_cases,
-    count(*) filter (where status = 'in_progress')::bigint as in_progress,
-    count(*) filter (where status = 'resolved')::bigint as resolved,
-    count(*) filter (where urgency = 'critical' and status <> 'resolved')::bigint as critical_issues
+    count(*) filter (where status in ('Submitted', 'Under Review', 'In Progress'))::bigint as open_cases,
+    count(*) filter (where status = 'In Progress')::bigint as in_progress,
+    count(*) filter (where status in ('Resolved', 'Closed'))::bigint as resolved,
+    count(*) filter (where urgency = 'critical' and status not in ('Resolved', 'Closed'))::bigint as critical_issues
   from public.submissions
   where public.is_ymca_admin();
 $$;
@@ -375,6 +382,7 @@ create or replace function public.get_recent_submissions(limit_count int default
 returns table(
   id uuid,
   ticket_ref text,
+  tracking_id text,
   submitter_name text,
   program_name text,
   urgency text,
@@ -388,6 +396,7 @@ as $$
   select
     s.id,
     s.ticket_ref,
+    s.tracking_id,
     public.submitter_display_name(s.is_anonymous, s.parent_id, s.child_id, s.caregiver_id) as submitter_name,
     public.submitter_program_name(s.parent_id, s.child_id, s.caregiver_id) as program_name,
     s.urgency,
@@ -401,6 +410,33 @@ $$;
 
 grant execute on function public.get_submission_stats() to authenticated;
 grant execute on function public.get_recent_submissions(int) to authenticated;
+
+create or replace function public.track_submission(lookup_tracking_id text)
+returns table(
+  tracking_id text,
+  submission_type text,
+  status text,
+  resolution_notes text,
+  created_at timestamptz,
+  updated_at timestamptz
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    s.tracking_id,
+    s.type as submission_type,
+    s.status,
+    s.resolution_notes,
+    s.created_at,
+    s.updated_at
+  from public.submissions s
+  where upper(s.tracking_id) = upper(trim(lookup_tracking_id))
+  limit 1;
+$$;
+
+grant execute on function public.track_submission(text) to anon, authenticated;
 
 insert into storage.buckets (id, name, public)
 values ('site-assets', 'site-assets', true)
@@ -455,9 +491,10 @@ create policy "Public can submit feedback"
 on public.submissions for insert
 to anon
 with check (
-  status = 'open'
+  status = 'Submitted'
   and assigned_staff_id is null
   and admin_note is null
+  and resolution_notes is null
   and reviewed_at is null
   and resolved_at is null
 );

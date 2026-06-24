@@ -16,6 +16,7 @@ import SubmissionsListView from '../views/portal/SubmissionsListView.vue'
 import SubmissionDetailView from '../views/portal/SubmissionDetailView.vue'
 import CaseManagementView from '../views/portal/CaseManagementView.vue'
 import SettingsView from '../views/portal/SettingsView.vue'
+import ReportsView from '../views/portal/ReportsView.vue'
 import { useAuth } from '../utils/useAuth'
 
 const routes = [
@@ -37,7 +38,9 @@ const routes = [
   { path: '/admin/qr-codes', name: 'admin-qr-codes', component: QRGeneratorView, meta: { requiresAuth: true } },
   { path: '/admin/submissions', name: 'admin-submissions', component: SubmissionsListView, meta: { requiresAuth: true } },
   { path: '/admin/submissions/:id', name: 'admin-submission-detail', component: SubmissionDetailView, meta: { requiresAuth: true } },
-  { path: '/admin/cases', name: 'admin-cases', component: CaseManagementView, meta: { requiresAuth: true } },
+  { path: '/admin/reports', name: 'admin-reports', component: ReportsView, meta: { requiresAuth: true } },
+  { path: '/admin/staff', name: 'admin-staff', component: CaseManagementView, meta: { requiresAuth: true } },
+  { path: '/admin/cases', redirect: '/admin/staff' },
   { path: '/admin/settings', name: 'admin-settings', component: SettingsView, meta: { requiresAuth: true } },
 ]
 

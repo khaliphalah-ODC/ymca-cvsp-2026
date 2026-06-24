@@ -32,7 +32,7 @@ function toggleTheme() {
         <img class="h-11 w-11 rounded-full object-cover" :src="ymcaImages.logo" alt="YMCA logo" />
         <span>CVSP 2026</span>
       </RouterLink>
-      <div class="hidden md:flex items-center gap-xl">
+      <div class="hidden md:flex items-center gap-md lg:gap-lg">
         <RouterLink
           v-for="item in store.navItems"
           :key="item.to"
@@ -43,8 +43,8 @@ function toggleTheme() {
         </RouterLink>
       </div>
       <div class="hidden md:flex items-center gap-sm">
-        <button class="w-10 h-10 rounded-full border border-outline-variant bg-surface-container-low text-primary grid place-items-center" type="button" aria-label="Toggle color theme" @click="toggleTheme">
-          <span class="material-symbols-outlined text-[20px]">palette</span>
+        <button :class="theme === 'green' ? 'theme-toggle theme-toggle-active' : 'theme-toggle'" type="button" :aria-label="theme === 'green' ? 'Green theme selected' : 'Switch to green theme'" @click="toggleTheme">
+          <span class="material-symbols-outlined text-[20px]">{{ theme === 'green' ? 'check' : 'palette' }}</span>
         </button>
         <RouterLink :class="ctaContainer ? 'bg-primary-container text-on-primary-container px-lg py-sm rounded-full font-bold hover:opacity-90 transition-all scale-95 duration-150 ease-in-out' : 'bg-primary text-on-primary px-lg py-sm rounded-full font-label-md text-label-md hover:opacity-90 transition-all scale-95 duration-150 ease-in-out'" to="/track">
           Track
@@ -60,7 +60,7 @@ function toggleTheme() {
         <img class="h-11 w-11 rounded-full object-cover" :src="ymcaImages.logo" alt="YMCA logo" />
         <span>CVSP 2026</span>
       </RouterLink>
-      <nav class="hidden md:flex items-center gap-xl" aria-label="Primary navigation">
+      <nav class="hidden md:flex items-center gap-md lg:gap-lg" aria-label="Primary navigation">
         <RouterLink
           v-for="item in store.navItems"
           :key="item.to"
@@ -83,8 +83,8 @@ function toggleTheme() {
         {{ item.label }}
       </RouterLink>
       <button class="inline-flex items-center gap-xs py-sm text-primary font-label-md" type="button" @click="toggleTheme">
-        <span class="material-symbols-outlined text-[20px]">palette</span>
-        Toggle theme
+        <span class="material-symbols-outlined text-[20px]">{{ theme === 'green' ? 'check' : 'palette' }}</span>
+        {{ theme === 'green' ? 'Green theme active' : 'Switch to green theme' }}
       </button>
     </div>
   </header>

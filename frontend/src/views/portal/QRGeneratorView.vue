@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
-import AdminMobileNav from '../../components/stitch/AdminMobileNav.vue'
+import AdminLayout from '../../components/stitch/AdminLayout.vue'
 
 const copied = ref('')
 const appUrl = computed(() => {
@@ -38,38 +38,13 @@ async function copyLink(location) {
 </script>
 
 <template>
-  <div class="text-on-background bg-background min-h-screen">
-    <AdminMobileNav />
-    <aside class="hidden md:flex flex-col h-screen py-lg px-md w-64 fixed left-0 top-0 z-40 bg-surface-container-low border-r border-outline-variant">
-      <div class="mb-xl px-sm">
-        <h1 class="font-headline-md text-headline-md font-black text-primary">Montserrado YMCA</h1>
-        <p class="font-label-sm text-label-sm text-on-surface-variant opacity-70">Staff Portal</p>
-      </div>
-      <nav class="flex-1 space-y-2" aria-label="Staff navigation">
-        <RouterLink class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg" to="/admin/dashboard">
-          <span class="material-symbols-outlined">dashboard</span>
-          <span class="font-label-md text-label-md">Overview</span>
-        </RouterLink>
-        <RouterLink class="flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container rounded-lg font-bold translate-x-1 transition-transform group" to="/admin/qr-codes">
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">qr_code_2</span>
-          <span class="font-label-md text-label-md">QR Codes</span>
-        </RouterLink>
-      </nav>
-    </aside>
-
-    <main class="md:ml-64 min-h-screen p-xl lg:p-2xl">
-      <header class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-md mb-xl">
-        <div>
-          <h2 class="font-headline-lg text-headline-lg text-on-surface">QR Code Access</h2>
-          <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
-            Generate location-specific QR codes for parents, children, and caregivers to access the private complaint and suggestion form.
-          </p>
-        </div>
+  <AdminLayout title="QR Code Access" subtitle="Generate location-specific QR codes for parents, children, and caregivers to access the private complaint and suggestion form.">
+      <div class="flex justify-end mb-lg">
         <RouterLink class="inline-flex items-center justify-center gap-xs px-lg py-sm bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 transition-opacity" :to="submissionLink('Front Desk')">
           <span class="material-symbols-outlined text-[20px]">open_in_new</span>
           Preview Form
         </RouterLink>
-      </header>
+      </div>
 
       <section class="grid grid-cols-1 xl:grid-cols-2 gap-lg">
         <article v-for="location in locations" :key="location.key" class="bg-surface card-shadow rounded-xl border border-outline-variant p-lg flex flex-col md:flex-row gap-lg">
@@ -100,6 +75,5 @@ async function copyLink(location) {
           </div>
         </article>
       </section>
-    </main>
-  </div>
+  </AdminLayout>
 </template>

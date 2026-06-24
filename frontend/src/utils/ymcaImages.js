@@ -16,7 +16,7 @@ export const ymcaImages = {
   hero: [heroOne, heroTwo, heroThree, heroFour, heroFive],
   gallery: [galleryOne, galleryTwo, galleryThree, ymcaOne, ymcaTwo, ymcaThree],
   activities: {
-    Basketball: heroTwo,
+    Basketball: galleryTwo,
     'Digital Literacy': ymcaTwo,
     Music: galleryOne,
     Chess: heroFive,

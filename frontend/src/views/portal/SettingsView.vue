@@ -1,14 +1,14 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import AdminMobileNav from '../../components/stitch/AdminMobileNav.vue'
+import AdminLayout from '../../components/stitch/AdminLayout.vue'
 import { useSubmissionStore } from '../../stores/submissionStore'
 import { supabase } from '../../utils/supabase'
-import { exportSubmissionsCsv, exportSubmissionsDoc, exportSubmissionsPdf } from '../../utils/exportReports'
+import { exportSubmissionsCsv, exportSubmissionsDoc, exportSubmissionsExcel, exportSubmissionsPdf } from '../../utils/exportReports'
 
 const store = useSubmissionStore()
 const exportRows = computed(() => store.submissions)
 const user = ref(null)
-const profile = ref({ full_name: '', email: '', avatar_url: '' })
+const profile = ref({ full_name: '', email: '', avatar_url: '', role: 'reviewer' })
 const avatarFile = ref(null)
 const avatarPreview = ref('')
 const profileStatus = ref('')
@@ -41,13 +41,14 @@ async function loadProfile() {
 
   const { data: adminProfile, error: profileError } = await supabase
     .from('admin_profiles')
-    .select('full_name, avatar_url')
+    .select('full_name, avatar_url, role')
     .eq('user_id', data.user.id)
     .maybeSingle()
 
   if (!profileError && adminProfile) {
     profile.value.full_name = adminProfile.full_name || ''
     profile.value.avatar_url = adminProfile.avatar_url || ''
+    profile.value.role = adminProfile.role || 'reviewer'
     avatarPreview.value = adminProfile.avatar_url || ''
   }
 }
@@ -72,15 +73,13 @@ async function saveProfile() {
   savingProfile.value = true
   profileStatus.value = ''
   try {
-    if (profile.value.email && profile.value.email !== user.value.email) {
-      const { error } = await supabase.auth.updateUser({ email: profile.value.email })
-      if (error) throw error
-    }
-
     const { error } = await supabase
       .from('admin_profiles')
-      .update({ full_name: profile.value.full_name })
-      .eq('user_id', user.value.id)
+      .upsert({
+        user_id: user.value.id,
+        full_name: profile.value.full_name,
+        role: profile.value.role || 'reviewer',
+      }, { onConflict: 'user_id' })
     if (error) throw error
 
     profileStatus.value = 'Profile saved.'
@@ -163,12 +162,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="text-on-background bg-background min-h-screen">
-    <AdminMobileNav />
-    <main class="p-xl lg:p-2xl">
+  <AdminLayout title="Settings" subtitle="Manage admin profile, avatar, password, reports, and QR code tools.">
       <section class="max-w-5xl mx-auto bg-surface card-shadow rounded-xl border border-outline-variant p-xl mb-lg">
-        <h1 class="font-headline-lg text-headline-lg text-on-surface mb-sm">Settings</h1>
-        <p class="font-body-md text-body-md text-on-surface-variant mb-lg">Manage admin profile, avatar, password, reports, and QR code tools.</p>
         <RouterLink class="inline-flex items-center gap-xs px-lg py-sm bg-primary text-on-primary rounded-xl font-bold" to="/admin/qr-codes">
           <span class="material-symbols-outlined text-[20px]">qr_code_2</span>
           Manage QR Codes
@@ -180,7 +175,8 @@ onMounted(() => {
           <h2 class="font-headline-md text-headline-md text-on-surface mb-md">Profile</h2>
           <div class="space-y-md">
             <label class="block space-y-sm"><span class="font-label-md text-label-md">Name</span><input v-model.trim="profile.full_name" class="w-full h-11 px-md bg-white border border-outline rounded-lg" type="text" /></label>
-            <label class="block space-y-sm"><span class="font-label-md text-label-md">Email</span><input v-model.trim="profile.email" class="w-full h-11 px-md bg-white border border-outline rounded-lg" type="email" /></label>
+            <label class="block space-y-sm"><span class="font-label-md text-label-md">Login Email</span><input v-model.trim="profile.email" class="w-full h-11 px-md bg-surface-container-low border border-outline rounded-lg text-on-surface-variant" readonly type="email" /></label>
+            <p class="font-label-sm text-label-sm text-on-surface-variant">Email changes are handled from Supabase Auth so staff do not get locked out by mistake.</p>
             <button class="px-lg py-sm bg-primary text-on-primary rounded-xl font-bold disabled:opacity-70" :disabled="savingProfile" type="button" @click="saveProfile">{{ savingProfile ? 'Saving...' : 'Save Profile' }}</button>
             <p v-if="profileStatus" class="font-body-md text-body-md text-on-surface-variant">{{ profileStatus }}</p>
           </div>
@@ -218,9 +214,10 @@ onMounted(() => {
         </article>
 
         <article class="bg-surface card-shadow rounded-xl border border-outline-variant p-xl">
-          <h2 class="font-headline-md text-headline-md text-on-surface mb-sm">Report Export</h2>
-          <p class="font-body-md text-body-md text-on-surface-variant mb-lg">Download the latest submissions for offline review and reporting.</p>
+          <h2 class="font-headline-md text-headline-md text-on-surface mb-sm">General Report Export</h2>
+          <p class="font-body-md text-body-md text-on-surface-variant mb-lg">Download all loaded complaints and suggestions with submitter contact details.</p>
           <div class="space-y-sm">
+            <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-primary text-on-primary rounded-xl font-bold" type="button" @click="exportSubmissionsExcel(exportRows)"><span class="material-symbols-outlined text-[20px]">dataset</span>Export Excel</button>
             <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsCsv(exportRows)"><span class="material-symbols-outlined text-[20px]">table_view</span>Export CSV</button>
             <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsPdf(exportRows)"><span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>Export PDF</button>
             <button class="w-full inline-flex items-center justify-center gap-xs px-lg py-sm bg-surface-container-high text-on-surface rounded-xl font-bold" type="button" @click="exportSubmissionsDoc(exportRows)"><span class="material-symbols-outlined text-[20px]">description</span>Export DOC</button>
@@ -228,6 +225,5 @@ onMounted(() => {
           <p class="font-label-sm text-label-sm text-on-surface-variant mt-md">{{ exportRows.length }} submissions loaded for export.</p>
         </article>
       </section>
-    </main>
-  </div>
+  </AdminLayout>
 </template>

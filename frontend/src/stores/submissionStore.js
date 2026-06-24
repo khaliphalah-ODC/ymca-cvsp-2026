@@ -23,6 +23,26 @@ function normalizeStatus(status) {
   return map[String(status || '').toLowerCase()] || status || 'Submitted'
 }
 
+function toDatabaseStatus(status) {
+  const map = {
+    submitted: 'open',
+    'under review': 'open',
+    'in progress': 'in_progress',
+    resolved: 'resolved',
+    closed: 'resolved',
+  }
+  return map[String(status || '').toLowerCase()] || status || 'open'
+}
+
+function statusQueryValues(status) {
+  const legacy = toDatabaseStatus(status)
+  return legacy === status ? [status] : [status, legacy]
+}
+
+function isStatusConstraintError(error) {
+  return error?.code === '23514' && String(error?.message || '').includes('submissions_status_check')
+}
+
 const detailSelect = `
   *,
   parents(*),
@@ -129,7 +149,7 @@ export const useSubmissionStore = defineStore('submissions', {
       try {
         const { data, error } = await supabase.rpc('get_recent_submissions', { limit_count: limit })
         if (error) throw error
-        this.submissions = data || []
+        this.submissions = (data || []).map(normalizeSubmission)
       } catch (err) {
         logSupabaseError('get_recent_submissions RPC failed; falling back to direct submissions query', err)
         const fallbackRows = await this.fetchRecentSubmissionsFallback(limit)
@@ -188,9 +208,10 @@ export const useSubmissionStore = defineStore('submissions', {
           .from('submissions')
           .select(detailSelect)
           .order('created_at', { ascending: false })
-          .limit(filters.limit || 50)
+          .limit(filters.limit || 100)
 
-        if (filters.status) query = query.eq('status', filters.status)
+        if (filters.status) query = query.in('status', statusQueryValues(filters.status))
+        if (filters.type) query = query.eq('type', filters.type)
         if (filters.category) query = query.eq('category', filters.category)
         if (filters.urgency) query = query.eq('urgency', filters.urgency)
         if (filters.dateFrom) query = query.gte('created_at', filters.dateFrom)
@@ -229,18 +250,29 @@ export const useSubmissionStore = defineStore('submissions', {
       }
     },
 
-    async updateSubmissionStatus(id, status, admin_note = '', assigned_staff_id = null, resolution_notes = '') {
+    async updateSubmissionStatus(id, status, admin_note = undefined, assigned_staff_id = null, resolution_notes = '') {
       this.loading = true
       this.error = ''
       try {
-        const updates = { status, admin_note, resolution_notes }
-        if (assigned_staff_id) updates.assigned_staff_id = assigned_staff_id
-        const { data, error } = await supabase
+        const buildUpdates = (nextStatus) => {
+          const updates = { status: nextStatus, resolution_notes }
+          if (admin_note !== undefined) updates.admin_note = admin_note
+          if (assigned_staff_id) updates.assigned_staff_id = assigned_staff_id
+          return updates
+        }
+
+        const saveWithStatus = (nextStatus) => supabase
           .from('submissions')
-          .update(updates)
+          .update(buildUpdates(nextStatus))
           .eq('id', id)
           .select(detailSelect)
           .single()
+
+        let { data, error } = await saveWithStatus(status)
+        const legacyStatus = toDatabaseStatus(status)
+        if (isStatusConstraintError(error) && legacyStatus !== status) {
+          ;({ data, error } = await saveWithStatus(legacyStatus))
+        }
         if (error) throw error
         const normalizedData = normalizeSubmission(data)
         this.selectedSubmission = normalizedData

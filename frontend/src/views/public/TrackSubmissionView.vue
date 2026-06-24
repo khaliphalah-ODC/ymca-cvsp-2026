@@ -14,6 +14,15 @@ function formatDate(value) {
   return value ? new Date(value).toLocaleString() : 'Not available'
 }
 
+function normalizeStatus(status) {
+  const map = {
+    open: 'Submitted',
+    in_progress: 'In Progress',
+    resolved: 'Resolved',
+  }
+  return map[String(status || '').toLowerCase()] || status || 'Submitted'
+}
+
 async function trackSubmission() {
   searched.value = true
   result.value = null
@@ -30,7 +39,7 @@ async function trackSubmission() {
       lookup_tracking_id: trackingId.value.trim(),
     })
     if (trackError) throw trackError
-    result.value = data?.[0] || null
+    result.value = data?.[0] ? { ...data[0], status: normalizeStatus(data[0].status) } : null
     if (!result.value) error.value = 'No submission was found for that tracking ID.'
   } catch (err) {
     console.error('[TrackSubmission] lookup failed', err)

@@ -2,13 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSubmissionStore } from '../../stores/submissionStore'
-import AdminMobileNav from '../../components/stitch/AdminMobileNav.vue'
+import AdminLayout from '../../components/stitch/AdminLayout.vue'
+import { exportSubmissionExcel } from '../../utils/exportReports'
 
 const route = useRoute()
 const store = useSubmissionStore()
 const statuses = ['Submitted', 'Under Review', 'In Progress', 'Resolved', 'Closed']
 const status = ref('Submitted')
-const adminNote = ref('')
 const resolutionNotes = ref('')
 const saved = ref(false)
 
@@ -18,13 +18,12 @@ const submitter = computed(() => submission.value?.parents || submission.value?.
 async function loadSubmission() {
   const data = await store.fetchSubmissionDetail(route.params.id)
   status.value = data?.status || 'Submitted'
-  adminNote.value = data?.admin_note || ''
   resolutionNotes.value = data?.resolution_notes || ''
 }
 
 async function saveChanges() {
   saved.value = false
-  await store.updateSubmissionStatus(route.params.id, status.value, adminNote.value, null, resolutionNotes.value)
+  await store.updateSubmissionStatus(route.params.id, status.value, undefined, null, resolutionNotes.value)
   saved.value = true
 }
 
@@ -32,9 +31,8 @@ onMounted(loadSubmission)
 </script>
 
 <template>
-  <div class="text-on-background bg-background min-h-screen">
-    <AdminMobileNav />
-    <main class="max-w-5xl mx-auto px-margin-mobile py-2xl">
+  <AdminLayout>
+    <div class="max-w-5xl mx-auto">
       <RouterLink class="inline-flex items-center gap-xs text-primary font-label-md text-label-md mb-lg" to="/admin/submissions">
         <span class="material-symbols-outlined text-[18px]">arrow_back</span>
         Back to submissions
@@ -53,6 +51,10 @@ onMounted(loadSubmission)
             </div>
             <span class="inline-flex px-md py-sm rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md">{{ submission.status }}</span>
           </div>
+          <button class="inline-flex items-center gap-xs px-md py-sm bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md mt-md" type="button" @click="exportSubmissionExcel(submission)">
+            <span class="material-symbols-outlined text-[18px]">dataset</span>
+            Export Individual Excel
+          </button>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
@@ -73,14 +75,13 @@ onMounted(loadSubmission)
             <h2 class="font-headline-md text-headline-md mb-md">Case Update</h2>
             <div class="space-y-md">
               <label class="space-y-sm block"><span class="font-label-md text-label-md">Status</span><select v-model="status" class="w-full h-11 px-md bg-white border border-outline rounded-lg"><option v-for="item in statuses" :key="item" :value="item">{{ item }}</option></select></label>
-              <label class="space-y-sm block"><span class="font-label-md text-label-md">Internal Note</span><textarea v-model.trim="adminNote" class="w-full p-md bg-white border border-outline rounded-lg resize-none" rows="6"></textarea></label>
-              <label class="space-y-sm block"><span class="font-label-md text-label-md">Resolution Notes</span><textarea v-model.trim="resolutionNotes" class="w-full p-md bg-white border border-outline rounded-lg resize-none" rows="5"></textarea></label>
+              <label class="space-y-sm block"><span class="font-label-md text-label-md">Update Note</span><textarea v-model.trim="resolutionNotes" class="w-full p-md bg-white border border-outline rounded-lg resize-none" placeholder="Write a short update participants can see when they track this case." rows="8"></textarea></label>
               <button class="w-full px-lg py-md bg-primary text-on-primary rounded-xl font-bold hover:opacity-90 disabled:opacity-70" :disabled="store.loading" type="button" @click="saveChanges">Save Case</button>
               <p v-if="saved" class="text-primary font-label-md text-label-md">Saved.</p>
             </div>
           </aside>
         </div>
       </template>
-    </main>
-  </div>
+    </div>
+  </AdminLayout>
 </template>
