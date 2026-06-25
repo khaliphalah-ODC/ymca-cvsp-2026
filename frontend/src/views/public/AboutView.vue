@@ -3,9 +3,10 @@ import { onMounted } from 'vue'
 import SiteNavbar from '../../components/stitch/SiteNavbar.vue'
 import SiteFooter from '../../components/stitch/SiteFooter.vue'
 import YmcaImage from '../../components/stitch/YmcaImage.vue'
+import { useSiteContentStore } from '../../stores/siteContent'
 import { ymcaImages } from '../../utils/ymcaImages'
 
-const benefits = ['Safe vacation engagement', 'Sportsmanship and teamwork', 'Digital and creative exposure', 'Practical hard skills', 'Confidence, leadership, and civic responsibility']
+const store = useSiteContentStore()
 
 const coreValues = [
   ['Integrity', 'Operating with transparency and financial stewardship.'],
@@ -31,13 +32,16 @@ onMounted(() => {
   <div class="bg-background text-on-background">
     <SiteNavbar active="About" />
     <main>
-      <section class="relative min-h-[560px] flex items-end overflow-hidden">
-        <YmcaImage :src="ymcaImages.hero[2]" alt="About CVSP 2026" wrapper-class="absolute inset-0" />
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent"></div>
-        <div class="relative z-10 max-w-container-max-width mx-auto px-md lg:px-xl pb-2xl w-full text-white">
-          <p class="font-label-md text-label-md text-primary-fixed uppercase">About CVSP 2026</p>
-          <h1 class="font-headline-xl text-headline-xl mt-sm max-w-3xl">Two months of learning, play, service, and growth</h1>
-          <p class="font-body-lg text-body-lg text-white/90 mt-md max-w-2xl">Hosted at YMCA Crown Hill, Broad Street, Monrovia.</p>
+      <section class="bg-primary text-on-primary overflow-hidden">
+        <div class="max-w-container-max-width mx-auto grid lg:grid-cols-2">
+          <div class="px-md lg:px-xl py-2xl md:py-3xl flex flex-col justify-center">
+            <p class="font-label-md text-label-md text-white/85 uppercase">About CVSP 2026</p>
+            <h1 class="text-[2.35rem] leading-[1.08] md:font-headline-xl md:text-headline-xl font-bold mt-sm max-w-3xl">Two months of learning, play, service, and growth</h1>
+            <p class="font-body-lg text-body-lg text-white/90 mt-md max-w-xl">Hosted at {{ store.registration.venue }}.</p>
+          </div>
+          <div class="min-h-[280px] md:min-h-[420px] lg:min-h-[560px] group">
+            <YmcaImage :src="ymcaImages.hero[2]" alt="About CVSP 2026" wrapper-class="h-full" />
+          </div>
         </div>
       </section>
 
@@ -59,14 +63,14 @@ onMounted(() => {
         <aside class="lg:col-span-5 space-y-md">
           <div class="scroll-slide rounded-xl bg-surface-container-low p-lg border border-outline-variant">
             <p class="font-label-sm text-label-sm text-primary uppercase">Duration</p>
-            <p class="font-headline-md text-headline-md">2 Months</p>
+            <p class="font-headline-md text-headline-md">{{ store.registration.duration }}</p>
           </div>
           <div class="scroll-slide rounded-xl bg-surface-container-low p-lg border border-outline-variant">
             <p class="font-label-sm text-label-sm text-primary uppercase">Venue</p>
-            <p class="font-headline-md text-headline-md">YMCA Crown Hill, Broad Street, Monrovia</p>
+            <p class="font-headline-md text-headline-md">{{ store.registration.venue }}</p>
           </div>
           <div class="scroll-slide rounded-xl overflow-hidden h-72 group">
-            <YmcaImage :src="ymcaImages.hero[1]" alt="CVSP poster" wrapper-class="h-full" />
+            <YmcaImage :src="ymcaImages.hero[3]" alt="CVSP participants" wrapper-class="h-full" />
           </div>
         </aside>
       </section>
@@ -88,9 +92,9 @@ onMounted(() => {
       </section>
 
       <section class="max-w-container-max-width mx-auto px-md lg:px-xl py-3xl">
-        <h2 class="font-headline-lg text-headline-lg mb-lg">Benefits for participants</h2>
+        <h2 class="font-headline-lg text-headline-lg mb-lg">Why join CVSP 2026?</h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-md">
-          <article v-for="benefit in benefits" :key="benefit" class="scroll-slide bg-surface-container-lowest rounded-xl border border-outline-variant p-md hover:-translate-y-1 hover:shadow-lg transition-all">
+          <article v-for="benefit in store.whyJoin" :key="benefit" class="scroll-slide bg-surface-container-lowest rounded-xl border border-outline-variant p-md hover:-translate-y-1 hover:shadow-lg transition-all">
             <span class="material-symbols-outlined text-primary">check_circle</span>
             <p class="font-label-md text-label-md mt-sm">{{ benefit }}</p>
           </article>

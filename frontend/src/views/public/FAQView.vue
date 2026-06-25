@@ -10,7 +10,7 @@ const faqs = [
   ['How do I submit a complaint?', 'Scan the official YMCA QR code provided during the program.'],
   ['How do I submit a suggestion?', 'Scan the official YMCA QR code and complete the suggestion form.'],
   ['Can I submit anonymously?', 'Yes, anonymous submissions are supported.'],
-  ['How do I track my complaint or suggestion?', 'Use your tracking ID on the Track Submission page.'],
+  ['How do I track my complaint or suggestion?', 'Use your private tracking code on the Track Submission page.'],
   ['What happens after I submit?', 'The YMCA team reviews submissions and updates their status until resolution.'],
   ['What statuses can my submission have?', 'Submitted, Under Review, In Progress, Resolved, or Closed.'],
 ]

@@ -261,6 +261,31 @@ textarea {
   transform: scale(1.08);
 }
 
+.skill-hero-swiper .swiper-pagination {
+  bottom: 18px !important;
+}
+
+.skill-hero-swiper,
+.skill-hero-swiper .swiper-wrapper,
+.skill-hero-swiper .swiper-slide {
+  height: 100%;
+}
+
+.skill-hero-swiper .swiper-slide {
+  overflow: hidden;
+}
+
+.skill-hero-swiper .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.82);
+  opacity: 1;
+}
+
+.skill-hero-swiper .swiper-pagination-bullet-active {
+  background: var(--color-primary-fixed);
+  width: 22px;
+  border-radius: 999px;
+}
+
 .max-w-xs { max-width: 20rem !important; }
 .max-w-md { max-width: 28rem !important; }
 .max-w-lg { max-width: 32rem !important; }

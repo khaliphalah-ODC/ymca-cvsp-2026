@@ -282,5 +282,30 @@ export const useSubmissionStore = defineStore('submissions', {
         this.loading = false
       }
     },
+
+    async deleteSubmission(id) {
+      this.loading = true
+      this.error = ''
+      try {
+        const { error } = await supabase
+          .from('submissions')
+          .delete()
+          .eq('id', id)
+
+        if (error) throw error
+
+        this.submissions = this.submissions.filter((item) => item.id !== id)
+        if (this.selectedSubmission?.id === id) this.selectedSubmission = null
+        await this.fetchStats()
+        return true
+      } catch (err) {
+        logSupabaseError('Unable to delete submission', err)
+        await this.logCurrentAdminSession()
+        this.error = err.message || 'Unable to delete submission.'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
   },
 })

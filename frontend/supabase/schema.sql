@@ -6,7 +6,7 @@
 -- use a fresh Supabase project while developing, or create a separate data
 -- migration before running this in production.
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 create sequence if not exists public.submission_ticket_seq start 1;
 
@@ -111,16 +111,44 @@ create index if not exists submissions_urgency_idx on public.submissions(urgency
 create index if not exists submissions_created_at_idx on public.submissions(created_at desc);
 create index if not exists submissions_assigned_staff_idx on public.submissions(assigned_staff_id);
 
+create or replace function public.generate_tracking_code()
+returns text
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_code text;
+begin
+  loop
+    v_code := 'CVSP-' || upper(substr(encode(extensions.gen_random_bytes(5), 'hex'), 1, 5))
+      || '-' || upper(substr(encode(extensions.gen_random_bytes(5), 'hex'), 1, 5));
+
+    exit when not exists (
+      select 1
+      from public.submissions
+      where tracking_id = v_code
+    );
+  end loop;
+
+  return v_code;
+end;
+$$;
+
 create or replace function public.set_submission_ticket_ref()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   if new.ticket_ref is null or new.ticket_ref = '' then
     new.ticket_ref := 'YMCA-' || lpad(nextval('public.submission_ticket_seq')::text, 5, '0');
   end if;
-  if new.tracking_id is null or new.tracking_id = '' then
-    new.tracking_id := new.ticket_ref;
+  if new.tracking_id is null
+    or new.tracking_id = ''
+    or new.tracking_id = new.ticket_ref
+    or new.tracking_id ~ '^YMCA-[0-9]+$'
+  then
+    new.tracking_id := public.generate_tracking_code();
   end if;
   return new;
 end;
@@ -252,7 +280,7 @@ create or replace function public.submit_program_feedback(
   p_message text default '',
   p_location text default 'unknown'
 )
-returns table(ticket_ref text, submission_id uuid)
+returns table(ticket_ref text, tracking_id text, submission_id uuid)
 language plpgsql
 security definer
 set search_path = public
@@ -262,6 +290,7 @@ declare
   v_child_id uuid;
   v_caregiver_id uuid;
   v_ticket_ref text;
+  v_tracking_id text;
   v_submission_id uuid;
 begin
   if p_submitted_by_type not in ('parent', 'child', 'caregiver') then
@@ -348,9 +377,10 @@ begin
     p_message,
     coalesce(nullif(p_location, ''), 'unknown')
   )
-  returning submissions.ticket_ref, submissions.id into v_ticket_ref, v_submission_id;
+  returning submissions.ticket_ref, submissions.tracking_id, submissions.id
+  into v_ticket_ref, v_tracking_id, v_submission_id;
 
-  return query select v_ticket_ref, v_submission_id;
+  return query select v_ticket_ref, v_tracking_id, v_submission_id;
 end;
 $$;
 
@@ -555,6 +585,12 @@ on public.submissions for update
 to authenticated
 using (public.is_ymca_admin())
 with check (public.is_ymca_admin());
+
+drop policy if exists "Admins can delete submissions" on public.submissions;
+create policy "Admins can delete submissions"
+on public.submissions for delete
+to authenticated
+using (public.is_ymca_admin());
 
 -- After creating an admin/staff user in Supabase Auth, run this with their user id:
 --

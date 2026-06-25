@@ -26,7 +26,7 @@ function toggleTheme() {
 </script>
 
 <template>
-  <header :class="['bg-background shadow-sm sticky top-0 z-50 w-full', contained ? 'h-20 flex justify-between items-center px-md lg:px-xl max-w-container-max-width mx-auto' : '']">
+  <header :class="['bg-background shadow-sm sticky top-0 z-50 w-full relative', contained ? 'h-20 flex justify-between items-center px-md lg:px-xl max-w-container-max-width mx-auto' : '']">
     <nav v-if="!contained" class="flex justify-between items-center px-md lg:px-xl h-20 w-full max-w-container-max-width mx-auto" aria-label="Primary navigation">
       <RouterLink to="/" class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
         <img class="h-11 w-11 rounded-full object-cover" :src="ymcaImages.logo" alt="YMCA logo" />
@@ -78,7 +78,7 @@ function toggleTheme() {
       </button>
     </template>
 
-    <div v-if="open" class="md:hidden bg-background border-t border-outline-variant px-md py-md space-y-sm">
+    <div v-if="open" class="md:hidden absolute left-0 right-0 top-full bg-background border-t border-outline-variant px-md py-md space-y-sm shadow-lg">
       <RouterLink v-for="item in store.navItems" :key="item.to" :to="item.to" class="block py-sm text-secondary font-label-md" @click="open = false">
         {{ item.label }}
       </RouterLink>

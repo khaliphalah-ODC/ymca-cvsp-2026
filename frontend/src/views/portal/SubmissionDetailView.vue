@@ -1,11 +1,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useSubmissionStore } from '../../stores/submissionStore'
 import AdminLayout from '../../components/stitch/AdminLayout.vue'
 import { exportSubmissionExcel } from '../../utils/exportReports'
 
 const route = useRoute()
+const router = useRouter()
 const store = useSubmissionStore()
 const statuses = ['Submitted', 'Under Review', 'In Progress', 'Resolved', 'Closed']
 const status = ref('Submitted')
@@ -25,6 +26,13 @@ async function saveChanges() {
   saved.value = false
   await store.updateSubmissionStatus(route.params.id, status.value, undefined, null, resolutionNotes.value)
   saved.value = true
+}
+
+async function deleteCurrentSubmission() {
+  const label = submission.value?.tracking_id || submission.value?.ticket_ref || 'this submission'
+  if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return
+  await store.deleteSubmission(route.params.id)
+  router.push('/admin/submissions')
 }
 
 onMounted(loadSubmission)
@@ -54,6 +62,10 @@ onMounted(loadSubmission)
           <button class="inline-flex items-center gap-xs px-md py-sm bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md mt-md" type="button" @click="exportSubmissionExcel(submission)">
             <span class="material-symbols-outlined text-[18px]">dataset</span>
             Export Individual Excel
+          </button>
+          <button class="inline-flex items-center gap-xs px-md py-sm bg-error-container text-on-error-container rounded-lg font-label-md text-label-md mt-md ml-sm" type="button" :disabled="store.loading" @click="deleteCurrentSubmission">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            Delete Case
           </button>
         </header>
 

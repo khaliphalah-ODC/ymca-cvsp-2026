@@ -36,6 +36,12 @@ async function applyFilters() {
   await store.fetchSubmissions(filters)
 }
 
+async function deleteSubmission(row) {
+  const label = row.tracking_id || row.ticket_ref || 'this submission'
+  if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return
+  await store.deleteSubmission(row.id)
+}
+
 onMounted(applyFilters)
 </script>
 
@@ -85,7 +91,12 @@ onMounted(applyFilters)
               <td class="px-lg py-md capitalize">{{ row.urgency }}</td>
               <td class="px-lg py-md"><span class="font-label-sm text-label-sm bg-surface-container-highest px-md py-1 rounded-full text-on-surface">{{ row.status }}</span></td>
               <td class="px-lg py-md text-on-surface-variant">{{ new Date(row.created_at).toLocaleDateString() }}</td>
-              <td class="px-lg py-md text-right"><RouterLink class="material-symbols-outlined text-on-surface-variant hover:text-primary" :to="`/admin/submissions/${row.id}`">visibility</RouterLink></td>
+              <td class="px-lg py-md text-right">
+                <div class="inline-flex items-center justify-end gap-sm">
+                  <RouterLink class="material-symbols-outlined text-on-surface-variant hover:text-primary" :to="`/admin/submissions/${row.id}`" aria-label="View submission">visibility</RouterLink>
+                  <button class="material-symbols-outlined text-on-surface-variant hover:text-error" type="button" aria-label="Delete submission" @click="deleteSubmission(row)">delete</button>
+                </div>
+              </td>
             </tr>
             <tr v-if="!store.loading && !filteredSubmissions.length"><td class="px-lg py-lg text-on-surface-variant" colspan="7">No submissions found.</td></tr>
           </tbody>

@@ -1,13 +1,20 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useSiteContentStore } from '../../stores/siteContent'
 import { ymcaImages } from '../../utils/ymcaImages'
 import { isSupabaseConfigured, supabase } from '../../utils/supabase'
 
 const route = useRoute()
 const router = useRouter()
+const siteContent = useSiteContentStore()
 const loading = ref(false)
 const error = ref('')
+const programOptions = computed(() => [
+  ...siteContent.programs.map((program) => program.title),
+  ...siteContent.hardSkills.map((skill) => skill.title),
+  ...siteContent.softSkills.map((skill) => skill.title),
+])
 
 const form = reactive({
   submitted_by_type: 'parent',
@@ -21,7 +28,7 @@ const form = reactive({
   program_group: '',
   follow_up_preference: false,
   supervision_role: '',
-  program_name: 'Basketball Academy',
+  program_name: 'Basketball',
   type: 'complaint',
   category: 'program',
   urgency: 'medium',
@@ -72,10 +79,10 @@ async function submitFeedback() {
 
     const { data, error: rpcError } = await supabase.rpc('submit_program_feedback', payload)
     if (rpcError) throw rpcError
-    const ticketRef = data?.[0]?.ticket_ref
-    if (!ticketRef) throw new Error('Submission was not saved. Please contact YMCA staff or try again.')
+    const trackingCode = data?.[0]?.tracking_id || data?.[0]?.ticket_ref
+    if (!trackingCode) throw new Error('Submission was not saved. Please contact YMCA staff or try again.')
     router.push({
-      path: `/success/${ticketRef}`,
+      path: `/success/${trackingCode}`,
       query: {
         location: String(location.value),
         type: form.type,
@@ -180,7 +187,7 @@ async function submitFeedback() {
           </h3>
           <div class="space-y-lg">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
-              <label class="space-y-sm"><span class="font-label-md text-label-md block">Program Selection</span><select v-model="form.program_name" class="w-full h-12 px-md bg-white border border-outline rounded-xl focus:ring-0 appearance-none"><option>Basketball Academy</option><option>Computer Literacy</option><option>Vocational Training</option><option>Youth Leadership Circle</option><option>Other</option></select></label>
+              <label class="space-y-sm"><span class="font-label-md text-label-md block">Program Selection</span><select v-model="form.program_name" class="w-full h-12 px-md bg-white border border-outline rounded-xl focus:ring-0 appearance-none"><option v-for="program in programOptions" :key="program" :value="program">{{ program }}</option></select></label>
               <label class="space-y-sm"><span class="font-label-md text-label-md block">Category</span><select v-model="form.category" class="w-full h-12 px-md bg-white border border-outline rounded-xl focus:ring-0 appearance-none"><option value="staff">Staff Professionalism</option><option value="safety">Safety & Security</option><option value="facilities">Facilities & Equipment</option><option value="program">Program Quality</option><option value="other">General Suggestion</option></select></label>
             </div>
 

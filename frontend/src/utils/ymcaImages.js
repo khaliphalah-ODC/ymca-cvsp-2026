@@ -1,4 +1,4 @@
-import logo from '../assets/ymca/logo/0a4854a1-3bf2-4c5f-998c-19ac76ff201d.jpeg'
+import logo from '../assets/ymca/logo/cvsp-logo.jpeg'
 import heroOne from '../assets/ymca/herosection/771ac2c3-0a3c-459e-83e0-54566122b5b1.jpeg'
 import heroTwo from '../assets/ymca/herosection/905f9952-d6e1-4f24-b5eb-7548e7e1b289.jpeg'
 import heroThree from '../assets/ymca/herosection/c8b6ef55-dbfa-4e52-830c-617222569c3d.jpeg'
@@ -10,11 +10,32 @@ import galleryThree from '../assets/ymca/gallery/c9153c7e-5e8f-4505-8e38-7e94744
 import ymcaOne from '../assets/ymca/779fe9d9-c497-4821-837e-5f069dd2262b.jpeg'
 import ymcaTwo from '../assets/ymca/80d4e97b-df8c-4c2a-9cfa-e35f1caa9258.jpeg'
 import ymcaThree from '../assets/ymca/ad1cae86-771d-44ef-ad6c-29c051ffbca3.jpeg'
+import apmTerminal from '../assets/ymca/othersection/apm-terminals-logo.jpeg'
+import cemenco from '../assets/ymca/othersection/cemnco.jpg'
+import miss from '../assets/ymca/othersection/miss.jpeg'
 
 export const ymcaImages = {
   logo,
+  partners: {
+    apmTerminal,
+    cemenco,
+    miss,
+  },
   hero: [heroOne, heroTwo, heroThree, heroFour, heroFive],
-  gallery: [galleryOne, galleryTwo, galleryThree, ymcaOne, ymcaTwo, ymcaThree],
+  gallery: [galleryOne, galleryTwo, galleryThree, ymcaOne, ymcaTwo, ymcaThree, heroOne,  heroThree, heroFour, heroFive, ],
+  showcase: {
+    match: miss,
+    flyer: heroTwo,
+    basketball: galleryTwo,
+    digital: ymcaTwo,
+    music: galleryOne,
+    catering: ymcaThree,
+    tailoring: heroThree,
+    cosmetology: galleryThree,
+    peace: heroFour,
+    entrepreneurship: ymcaOne,
+    civic: heroOne,
+  },
   activities: {
     Basketball: galleryTwo,
     'Digital Literacy': ymcaTwo,

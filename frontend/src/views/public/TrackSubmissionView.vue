@@ -77,7 +77,7 @@ async function trackSubmission() {
   error.value = ''
 
   if (!trackingId.value.trim()) {
-    error.value = 'Enter a tracking ID to continue.'
+    error.value = 'Enter a tracking code to continue.'
     return
   }
 
@@ -88,10 +88,10 @@ async function trackSubmission() {
     })
     if (trackError) throw trackError
     result.value = data?.[0] ? { ...data[0], status: normalizeStatus(data[0].status) } : null
-    if (!result.value) error.value = 'No submission was found for that tracking ID.'
+    if (!result.value) error.value = 'No submission was found for that tracking code.'
   } catch (err) {
     console.error('[TrackSubmission] lookup failed', err)
-    error.value = err.message || 'Unable to check this tracking ID right now.'
+    error.value = err.message || 'Unable to check this tracking code right now.'
   } finally {
     loading.value = false
   }
@@ -107,18 +107,18 @@ async function trackSubmission() {
         <div class="lg:col-span-5">
           <p class="font-label-md text-label-md text-primary uppercase">Track Submission</p>
           <h1 class="font-headline-xl text-headline-xl mt-sm">Check a complaint or suggestion</h1>
-          <p class="font-body-lg text-body-lg text-on-surface-variant mt-md">Enter the tracking ID received after submitting through an official YMCA QR code.</p>
+          <p class="font-body-lg text-body-lg text-on-surface-variant mt-md">Enter the private tracking code received after submitting through an official YMCA QR code.</p>
         </div>
         <section class="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg card-shadow">
           <form class="flex flex-col sm:flex-row gap-sm" @submit.prevent="trackSubmission">
-            <input v-model.trim="trackingId" class="flex-1 h-12 px-md rounded-lg border border-outline bg-white" placeholder="Example: YMCA-00012" type="text" />
+            <input v-model.trim="trackingId" class="flex-1 h-12 px-md rounded-lg border border-outline bg-white" placeholder="Example: CVSP-A91F3-7D2B0" type="text" />
             <button class="h-12 px-lg rounded-lg bg-primary text-on-primary font-bold disabled:opacity-70" :disabled="loading" type="submit">
               {{ loading ? 'Checking...' : 'Search' }}
             </button>
           </form>
 
           <div v-if="!searched" class="mt-lg rounded-xl bg-surface-container-low p-lg text-on-surface-variant">
-            Enter your tracking ID to view the current status.
+            Enter your tracking code to view the current status.
           </div>
           <div v-else-if="error" class="mt-lg rounded-xl bg-error-container text-on-error-container p-lg">
             {{ error }}

@@ -7,10 +7,10 @@
           Children’s Vacation Sports Program at YMCA Crown Hill, Broad Street, Monrovia.
         </p>
         <div class="flex gap-md">
-          <a class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all" href="#" aria-label="Social profile">
+          <a class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all" href="https://www.facebook.com/share/1E6Ti8zMaC/" target="_blank" rel="noopener noreferrer" aria-label="Facebook page">
             <span class="material-symbols-outlined text-xl">share</span>
           </a>
-          <a class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all" href="#" aria-label="Email">
+          <a class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all" href="mailto:cvsp@montserradoymca.org" aria-label="Email CVSP">
             <span class="material-symbols-outlined text-xl">alternate_email</span>
           </a>
         </div>

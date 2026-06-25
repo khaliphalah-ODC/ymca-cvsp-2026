@@ -3,8 +3,10 @@ import { ref } from 'vue'
 import SiteNavbar from '../../components/stitch/SiteNavbar.vue'
 import SiteFooter from '../../components/stitch/SiteFooter.vue'
 import YmcaImage from '../../components/stitch/YmcaImage.vue'
+import { useSiteContentStore } from '../../stores/siteContent'
 import { ymcaImages } from '../../utils/ymcaImages'
 
+const store = useSiteContentStore()
 const form = ref({ name: '', email: '', phone: '', subject: 'Program Information', message: '' })
 const status = ref('')
 
@@ -32,19 +34,22 @@ function submitContact() {
   <div class="bg-background text-on-background">
     <SiteNavbar active="Contact" />
     <main>
-      <section class="relative min-h-[520px] flex items-end overflow-hidden">
-        <YmcaImage :src="ymcaImages.hero[0]" alt="Contact YMCA CVSP" wrapper-class="absolute inset-0" />
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-        <div class="relative z-10 max-w-container-max-width mx-auto px-md lg:px-xl pb-2xl w-full text-white">
-          <p class="font-label-md text-label-md text-primary-fixed uppercase">Contact YMCA</p>
-          <h1 class="font-headline-xl text-headline-xl mt-sm max-w-3xl">Connect with the CVSP 2026 team</h1>
-          <p class="font-body-lg text-body-lg text-white/90 mt-md max-w-2xl">Ask about registration, schedules, venue information, and participant support.</p>
+      <section class="bg-primary text-on-primary overflow-hidden">
+        <div class="max-w-container-max-width mx-auto grid lg:grid-cols-2">
+          <div class="px-md lg:px-xl py-2xl md:py-3xl flex flex-col justify-center">
+            <p class="font-label-md text-label-md text-white/85 uppercase">Contact YMCA</p>
+            <h1 class="text-[2.35rem] leading-[1.08] md:font-headline-xl md:text-headline-xl font-bold mt-sm max-w-3xl">Connect with the CVSP 2026 team</h1>
+            <p class="font-body-lg text-body-lg text-white/90 mt-md max-w-xl">Ask about registration, schedules, venue information, and participant support.</p>
+          </div>
+          <div class="min-h-[320px] md:min-h-[460px] lg:min-h-[560px] group">
+            <YmcaImage :src="ymcaImages.hero[0]" alt="Contact YMCA CVSP" wrapper-class="h-full" />
+          </div>
         </div>
       </section>
 
       <section class="max-w-container-max-width mx-auto px-md lg:px-xl py-3xl grid lg:grid-cols-12 gap-xl">
         <div class="lg:col-span-5 space-y-md">
-          <article v-for="info in [['call','Phone','+231 771 907 585'],['mail','Email','cvsp@montserradoymca.org'],['location_on','Location','YMCA Crown Hill\\nBroad Street, Monrovia']]" :key="info[1]" class="bg-surface-container-lowest rounded-xl p-lg custom-shadow border border-outline-variant flex gap-md items-start transition-all hover:-translate-y-1">
+          <article v-for="info in [['call','Phone',store.registration.phone],['mail','Email',store.registration.email],['language','Website',store.registration.website],['location_on','Location',store.registration.venue],['calendar_month','Duration',store.registration.duration]]" :key="info[1]" class="bg-surface-container-lowest rounded-xl p-lg custom-shadow border border-outline-variant flex gap-md items-start transition-all hover:-translate-y-1">
             <div class="p-sm rounded-lg bg-primary-container text-on-primary-container"><span class="material-symbols-outlined text-2xl">{{ info[0] }}</span></div>
             <div><h2 class="font-headline-md text-headline-md mb-xs">{{ info[1] }}</h2><p class="text-on-surface-variant whitespace-pre-line">{{ info[2] }}</p></div>
           </article>
